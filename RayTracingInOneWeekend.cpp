@@ -3,6 +3,8 @@
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
 #include "ray.h"
+#include "hittable.h"
+#include "camera.h"
 
 using namespace std;
 
@@ -128,13 +130,7 @@ int main() {
 
     glDisable(GL_DEPTH_TEST);
 
-    // rendering
-    auto ray_color = [](const ray& r)->glm::vec3
-    {
-        float product = glm::dot(glm::normalize(r.direction()), glm::vec3(0, 0, -1));
-        return glm::vec3(1.0, 1.0, product);
-    };
-
+    // helper functions
     auto setPixelColor = [](int h, int w, unsigned char* p, const glm::vec3& col)
     {
         int index = 3 * (h * window_width + w);
@@ -146,30 +142,52 @@ int main() {
         p[index++] = b;
     };
 
-	// camera
-    auto origin = glm::vec3(0.f);
-    float focal_length = 1.0;
-    float screenHeight = 2;
-    float screenWidth = screenHeight * aspect_ratio;
-    auto lower_left_corner =
-        origin - glm::vec3(screenWidth / 2, .0f, .0f) - glm::vec3(.0f, screenHeight / 2, .0f) - glm::vec3(.0f, .0f, focal_length);
+	// shapes
+    hittable_list world;
+    world.add(make_shared<sphere>(glm::vec3(0, 0, -4), 2.0));
+    world.add(make_shared<sphere>(glm::vec3(0, -100.5, 0), 97));
 	
+    // rendering
+    bool needUpdate = true;
+    hit_record record;
+    auto ray_color = [&](const ray& r)->glm::vec3
+    {
+    	if(world.hit(r, 0, 100, record))
+    	{
+            return (record.normal + glm::vec3(1.0)) / 2.0f;
+    	}
+        glm::vec3 normDir = glm::normalize(r.direction());
+        float t = 0.5 * (normDir.y + 1);
+        return t * glm::vec3(0.5, 0.7, 1.0) + (1 - t) * glm::vec3(1);
+    };
+
+
+	// camera
+    glm::vec3 origin(0.f, 0.f, -5);
+    glm::vec3 center(0, 0, 4);
+    glm::vec3 up(0.f, 1.f, 0.f);
+    camera cam(origin, center, up,1.0, 2, 2 * aspect_ratio);
+
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-    	
-        for (int j = window_height - 1; j >= 0; --j) {
-            for (int i = 0; i < window_width; ++i) {
-                float u = static_cast<float>(j) / window_height;
-                float v = static_cast<float>(i) / window_width;
-                glm::vec3 pixelPos =
-                    lower_left_corner + glm::vec3(0.f, u * screenHeight, 0.f) + glm::vec3(v * screenWidth, 0.f, 0.f);
-                glm::vec3 color = ray_color(ray(origin, pixelPos - origin));
-            	setPixelColor(j, i, data, color);
+
+    	if(needUpdate)
+    	{
+            //cam.setOrigin(glm::vec3(origin.x, origin.y, origin.z--));
+            for (int j = window_height - 1; j >= 0; --j) {
+                for (int i = 0; i < window_width; ++i) {
+                    float u = static_cast<float>(j) / window_height;
+                    float v = static_cast<float>(i) / window_width;
+                    glm::vec3 color = ray_color(cam.getRayFromScreenPos(u, v));
+                    setPixelColor(j, i, data, color);
+                }
             }
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            //needUpdate = false;
+    	}
+        
         glUseProgram(shaderProgram);
         glBindTexture(GL_TEXTURE_2D, texture);
     	glBindVertexArray(quadVAO);
