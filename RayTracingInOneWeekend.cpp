@@ -1,7 +1,9 @@
 ﻿#include <iostream>
+#include <limits>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
+#include "rtweekend.h"
 #include "ray.h"
 #include "hittable.h"
 #include "camera.h"
@@ -11,6 +13,8 @@ using namespace std;
 // configs
 const int window_width = 1024;
 const int window_height = 1024;
+const double infinity = std::numeric_limits<double>::infinity();
+const int samples = 4;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
 
@@ -152,7 +156,7 @@ int main() {
     hit_record record;
     auto ray_color = [&](const ray& r)->glm::vec3
     {
-    	if(world.hit(r, 0, 100, record))
+    	if(world.hit(r, 0, infinity, record))
     	{
             return (record.normal + glm::vec3(1.0)) / 2.0f;
     	}
@@ -163,10 +167,10 @@ int main() {
 
 
 	// camera
-    glm::vec3 origin(0.f, 0.f, -5);
-    glm::vec3 center(0, 0, 4);
+    glm::vec3 eye(0.f, 0.f, 1.f);
+    glm::vec3 center(0, 0, -4);
     glm::vec3 up(0.f, 1.f, 0.f);
-    camera cam(origin, center, up,1.0, 2, 2 * aspect_ratio);
+    camera cam(eye, center, up,1.0, 2, 2 * aspect_ratio);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -175,12 +179,16 @@ int main() {
 
     	if(needUpdate)
     	{
-            //cam.setOrigin(glm::vec3(origin.x, origin.y, origin.z--));
             for (int j = window_height - 1; j >= 0; --j) {
                 for (int i = 0; i < window_width; ++i) {
                     float u = static_cast<float>(j) / window_height;
                     float v = static_cast<float>(i) / window_width;
-                    glm::vec3 color = ray_color(cam.getRayFromScreenPos(u, v));
+                    glm::vec3 color(0.f);
+                	for(int s = 0; s < samples; ++s)
+                	{
+                        color += ray_color(cam.getRayFromScreenPos(u + random_double() / (window_height - 1), v + random_double() / (window_width - 1)));
+                	}
+                    color /= samples;
                     setPixelColor(j, i, data, color);
                 }
             }
