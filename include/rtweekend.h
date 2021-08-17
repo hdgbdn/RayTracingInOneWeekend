@@ -22,3 +22,7 @@ vec3 random_in_unit_sphere() {
         return p;
     }
 }
+
+vec3 random_unit_vector() {
+    return normalize(random_in_unit_sphere());
+}

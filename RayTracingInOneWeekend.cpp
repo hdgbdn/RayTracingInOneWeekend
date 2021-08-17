@@ -16,7 +16,7 @@ const int window_width = 1024;
 const int window_height = 1024;
 const double infinity = std::numeric_limits<double>::infinity();
 const int samples = 4;
-const int ray_depth = 400;
+const int ray_depth = 40;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
 
@@ -140,9 +140,9 @@ int main() {
     auto setPixelColor = [](int h, int w, unsigned char* p, const glm::vec3& col)
     {
         int index = 3 * (h * window_width + w);
-        unsigned char r = col.r * 255;
-        unsigned char g = col.g * 255;
-        unsigned char b = col.b * 255;
+        unsigned char r = sqrt(col.r) * 255;
+        unsigned char g = sqrt(col.g) * 255;
+        unsigned char b = sqrt(col.b) * 255;
         p[index++] = r;
         p[index++] = g;
         p[index++] = b;
@@ -159,9 +159,9 @@ int main() {
     {
         hit_record record;
         if (depth <= 0) return vec3(0.f);
-    	if(list.hit(r, 0, infinity, record))
+    	if(list.hit(r, .001, infinity, record))
     	{
-            vec3 target = record.p + record.normal + random_in_unit_sphere();
+            vec3 target = record.p + record.normal + random_unit_vector();
             return 0.5f * ray_color(ray(record.p, target - record.p), list, depth - 1);
     	}
         glm::vec3 normDir = glm::normalize(r.direction());
