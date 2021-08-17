@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <limits>
+#include <functional>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
@@ -15,6 +16,7 @@ const int window_width = 1024;
 const int window_height = 1024;
 const double infinity = std::numeric_limits<double>::infinity();
 const int samples = 4;
+const int ray_depth = 400;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
 
@@ -153,12 +155,14 @@ int main() {
 	
     // rendering
     bool needUpdate = true;
-    hit_record record;
-    auto ray_color = [&](const ray& r)->glm::vec3
+    std::function<glm::vec3(const ray&, const hittable_list&, int)> ray_color = [&](const ray& r, const hittable_list& list, int depth)->glm::vec3
     {
-    	if(world.hit(r, 0, infinity, record))
+        hit_record record;
+        if (depth <= 0) return vec3(0.f);
+    	if(list.hit(r, 0, infinity, record))
     	{
-            return (record.normal + glm::vec3(1.0)) / 2.0f;
+            vec3 target = record.p + record.normal + random_in_unit_sphere();
+            return 0.5f * ray_color(ray(record.p, target - record.p), list, depth - 1);
     	}
         glm::vec3 normDir = glm::normalize(r.direction());
         float t = 0.5 * (normDir.y + 1);
@@ -186,7 +190,7 @@ int main() {
                     glm::vec3 color(0.f);
                 	for(int s = 0; s < samples; ++s)
                 	{
-                        color += ray_color(cam.getRayFromScreenPos(u + random_double() / (window_height - 1), v + random_double() / (window_width - 1)));
+                        color += ray_color(cam.getRayFromScreenPos(u + random_double() / (window_height - 1), v + random_double() / (window_width - 1)), world, ray_depth);
                 	}
                     color /= samples;
                     setPixelColor(j, i, data, color);
