@@ -83,8 +83,13 @@ public:
 		attenuation = vec3(1.0, 1.0, 1.0);
 		float refraction_ratio = record.front_face ? (1.0 / ir) : ir;
 		vec3 unit_direction = normalize(rIn.direction());
-		vec3 refracted = rtweekend::refract(unit_direction, record.normal, refraction_ratio);
-		scattered = ray(record.p, refracted);
+		float cos_theta = fmin(dot(-unit_direction, record.normal), 1.0);
+		float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+		bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+		vec3 direction;
+		if (cannot_refract) { direction = rtweekend::reflect(unit_direction, record.normal); }
+		else { direction = rtweekend::refract(unit_direction, record.normal, refraction_ratio); }
+		scattered = ray(record.p, direction);
 		return true;
 	}
 

@@ -16,7 +16,7 @@ using namespace std;
 const int window_width = 400;
 const int window_height = 400;
 const double infinity = std::numeric_limits<double>::infinity();
-const int samples = 4;
+const int samples = 8;
 const int ray_depth = 20;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
@@ -158,7 +158,8 @@ int main() {
 	shared_ptr<dielectric> glass = make_shared<dielectric>(1.5f);
     hittable_list world;
     world.add(make_shared<sphere>(glm::vec3(-4, 0, -4), 2.0, blue));
-    world.add(make_shared<sphere>(glm::vec3(0, 0, -2), 2.0, glass));
+    world.add(make_shared<sphere>(glm::vec3(0, 0, -3), 2.0, glass));
+    world.add(make_shared<sphere>(glm::vec3(0, 0, -3), -1.8, glass));
     world.add(make_shared<sphere>(glm::vec3(4, 0, -4), 2.0, fuzzyRed));
     world.add(make_shared<sphere>(glm::vec3(0, -100.5, 0), 98.5, red));
 	
