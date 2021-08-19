@@ -8,15 +8,16 @@
 #include "ray.h"
 #include "hittable.h"
 #include "camera.h"
+#include "material.h"
 
 using namespace std;
 
 // configs
-const int window_width = 1024;
-const int window_height = 1024;
+const int window_width = 400;
+const int window_height = 400;
 const double infinity = std::numeric_limits<double>::infinity();
 const int samples = 4;
-const int ray_depth = 40;
+const int ray_depth = 20;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
 
@@ -149,9 +150,17 @@ int main() {
     };
 
 	// shapes
+    shared_ptr<lambertian> red = make_shared<lambertian>(vec3(0.9, 0.1, 0.1));
+	shared_ptr<lambertian> blue = make_shared<lambertian>(vec3(0.3, 0.9, 1.0));
+	shared_ptr<metal> greenMatel = make_shared<metal>(vec3(0.1, 0.9, 0.1));
+	shared_ptr<metal> whiteMatel = make_shared<metal>(vec3(1., 1., 1.));
+	shared_ptr<FuzzyMetal> fuzzyRed = make_shared<FuzzyMetal>(vec3(0.9, 0.1, 0.1), 0.8f);
+	shared_ptr<dielectric> glass = make_shared<dielectric>(1.5f);
     hittable_list world;
-    world.add(make_shared<sphere>(glm::vec3(0, 0, -4), 2.0));
-    world.add(make_shared<sphere>(glm::vec3(0, -100.5, 0), 97));
+    world.add(make_shared<sphere>(glm::vec3(-4, 0, -4), 2.0, blue));
+    world.add(make_shared<sphere>(glm::vec3(0, 0, -4), 2.0, glass));
+    world.add(make_shared<sphere>(glm::vec3(4, 0, -4), 2.0, fuzzyRed));
+    world.add(make_shared<sphere>(glm::vec3(0, -100.5, 0), 98.5, red));
 	
     // rendering
     bool needUpdate = true;
@@ -161,20 +170,27 @@ int main() {
         if (depth <= 0) return vec3(0.f);
     	if(list.hit(r, .001, infinity, record))
     	{
-            vec3 target = record.p + record.normal + random_unit_vector();
-            return 0.5f * ray_color(ray(record.p, target - record.p), list, depth - 1);
+            ray scattered;
+            vec3 attenuation;
+            if (record.pMat->scatter(r, record, attenuation, scattered))
+            {
+                return attenuation * ray_color(scattered, list, depth - 1);
+            }
+            else
+            {
+                return vec3(0);
+            }
     	}
         glm::vec3 normDir = glm::normalize(r.direction());
         float t = 0.5 * (normDir.y + 1);
         return t * glm::vec3(0.5, 0.7, 1.0) + (1 - t) * glm::vec3(1);
     };
 
-
 	// camera
     glm::vec3 eye(0.f, 0.f, 1.f);
     glm::vec3 center(0, 0, -4);
     glm::vec3 up(0.f, 1.f, 0.f);
-    camera cam(eye, center, up,1.0, 2, 2 * aspect_ratio);
+    camera cam(eye, center, up,1, 2, 2 * aspect_ratio);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -190,7 +206,7 @@ int main() {
                     glm::vec3 color(0.f);
                 	for(int s = 0; s < samples; ++s)
                 	{
-                        color += ray_color(cam.getRayFromScreenPos(u + random_double() / (window_height - 1), v + random_double() / (window_width - 1)), world, ray_depth);
+                        color += ray_color(cam.getRayFromScreenPos(u + rtweekend::random_double() / (window_height - 1), v + rtweekend::random_double() / (window_width - 1)), world, ray_depth);
                 	}
                     color /= samples;
                     setPixelColor(j, i, data, color);

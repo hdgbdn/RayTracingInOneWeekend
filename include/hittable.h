@@ -9,9 +9,12 @@ using std::shared_ptr;
 using std::make_shared;
 using std::vector;
 
+class material;
+
 struct hit_record {
     glm::vec3 p;
     glm::vec3 normal;
+    shared_ptr<material> pMat;
     double t;
     bool front_face;
 
@@ -29,14 +32,16 @@ public:
 class sphere: public hittable
 {
 public:
-    sphere(const glm::vec3&, double);
+    sphere(const glm::vec3&, double, shared_ptr<material>);
     virtual bool hit(const ray&, double, double, hit_record&) const override;
 public:
     glm::vec3 center;
     double radius;
+    shared_ptr<material> pMat;
 };
 
-inline sphere::sphere(const glm::vec3& c, double r) : center(c), radius(r) {}
+inline sphere::sphere(const glm::vec3& c, double r, shared_ptr<material> pm)
+		: center(c), radius(r), pMat(pm) {}
 
 inline bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const
 {
@@ -63,6 +68,7 @@ inline bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& re
         rec.t = root;
         glm::vec3 outward_normal = (p - center) / static_cast<float>(radius);
         rec.set_face_normal(r, outward_normal);
+        rec.pMat = pMat;
     }
     return true;
 }
