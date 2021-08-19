@@ -47,29 +47,23 @@ inline bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& re
 {
     glm::vec3 oc = r.origin() - center;
     auto a = glm::dot(r.direction(), r.direction());
-    auto b = 2 * glm::dot(oc, r.direction());
+	auto halfB = glm::dot(oc, r.direction());
     auto c = glm::dot(oc, oc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
-    if (discriminant < 0)
-    {
-        return false;
+    auto discriminant = halfB * halfB - a * c;
+    if (discriminant < 0) { return false; }
+    auto sqrtd = sqrt(discriminant);
+    auto root = (-halfB - sqrtd) / a;
+
+    if (root < t_min || t_max < root) {
+        root = (-halfB + sqrtd) / a;
+        if (root < t_min || t_max < root)
+            return false;
     }
-    else
-    {
-        auto root = (-b - sqrt(discriminant)) / (2.0 * a);
-        auto p = r.at(root);
-    	
-        if (root < t_min || t_max < root) {
-            root = (-b + sqrt(discriminant)) / (2.0 * a);
-            if (root < t_min || t_max < root)
-                return false;
-        }
-        rec.p = p;
-        rec.t = root;
-        glm::vec3 outward_normal = (p - center) / static_cast<float>(radius);
-        rec.set_face_normal(r, outward_normal);
-        rec.pMat = pMat;
-    }
+    rec.t = root;
+    rec.p = r.at(root);
+    glm::vec3 outward_normal = (rec.p - center) / static_cast<float>(radius);
+    rec.set_face_normal(r, outward_normal);
+    rec.pMat = pMat;
     return true;
 }
 

@@ -158,7 +158,7 @@ int main() {
 	shared_ptr<dielectric> glass = make_shared<dielectric>(1.5f);
     hittable_list world;
     world.add(make_shared<sphere>(glm::vec3(-4, 0, -4), 2.0, blue));
-    world.add(make_shared<sphere>(glm::vec3(0, 0, -4), 2.0, glass));
+    world.add(make_shared<sphere>(glm::vec3(0, 0, -2), 2.0, glass));
     world.add(make_shared<sphere>(glm::vec3(4, 0, -4), 2.0, fuzzyRed));
     world.add(make_shared<sphere>(glm::vec3(0, -100.5, 0), 98.5, red));
 	

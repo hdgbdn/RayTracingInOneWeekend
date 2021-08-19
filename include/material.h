@@ -83,12 +83,12 @@ public:
 		attenuation = vec3(1.0, 1.0, 1.0);
 		float refraction_ratio = record.front_face ? (1.0 / ir) : ir;
 		vec3 unit_direction = normalize(rIn.direction());
-		vec3 refracted = refract(unit_direction, -record.normal, refraction_ratio);
+		vec3 refracted = rtweekend::refract(unit_direction, record.normal, refraction_ratio);
 		scattered = ray(record.p, refracted);
 		return true;
 	}
 
-public:
+protected:
 	double ir; // Index of Refraction
 };
 
