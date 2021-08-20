@@ -10,7 +10,7 @@ class camera
 {
 public:
 	camera(const vec3& e, const vec3& c, const vec3& u, double focal, double width, double height) :
-		eye(e), center(c), up(u), viewToWorld(glm::inverse(lookAt(eye, center, up))),
+		eye(e), center(c), up(u), viewToWorld(inverse(lookAt(eye, center, up))),
 		focalLength(focal), screenWidth(width), screenHeight(height),
 		lowerLeftCornerLocal(getLLCL())	{}
 	void setEye(const vec3&);
@@ -31,7 +31,7 @@ private:
 
 inline vec3 camera::getLLCL()
 {
-	return -vec3(screenWidth / 2, .0f, .0f) - vec3(.0f, screenHeight / 2, .0f) + vec3(.0f, .0f, -focalLength);
+	return vec3(-screenWidth / 2, .0f, .0f) + vec3(.0f, -screenHeight / 2, .0f) + vec3(.0f, .0f, -focalLength);
 }
 
 
@@ -50,16 +50,14 @@ inline void camera::setCenter(const vec3& c)
 
 inline void camera::updateCamera()
 {
-	viewToWorld = glm::inverse(lookAt(eye, center, up));
+	viewToWorld = inverse(lookAt(eye, center, up));
 	lowerLeftCornerLocal = getLLCL();
 }
 
 inline ray camera::getRayFromScreenPos(double u, double v)
 {
-	auto pixelPosLocal = lowerLeftCornerLocal + vec3(0.f, u * screenHeight, 0.f) + vec3(v * screenWidth, 0.f, 0.f) - vec3(.0f, .0f, focalLength);
-	return ray(eye, vec3( viewToWorld * vec4(pixelPosLocal, 1.0f)));
+	auto pixelPosLocal = lowerLeftCornerLocal + vec3(0.f, u * screenHeight, 0.f) + vec3(v * screenWidth, 0.f, 0.f);
+	return ray(eye, vec3(viewToWorld * vec4(pixelPosLocal, 1.0f))-eye);
 }
-
-
 
 #endif

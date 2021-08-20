@@ -16,8 +16,8 @@ using namespace std;
 const int window_width = 400;
 const int window_height = 400;
 const double infinity = std::numeric_limits<double>::infinity();
-const int samples = 8;
-const int ray_depth = 20;
+const int samples = 4;
+const int ray_depth = 10;
 
 const float aspect_ratio = static_cast<float>(window_width) / window_height;
 
@@ -188,8 +188,8 @@ int main() {
     };
 
 	// camera
-    glm::vec3 eye(0.f, 0.f, 1.f);
-    glm::vec3 center(0, 0, -4);
+    glm::vec3 eye(0.f, 1.f, 2.f);
+    glm::vec3 center(0.f, 0.f, -4.f);
     glm::vec3 up(0.f, 1.f, 0.f);
     camera cam(eye, center, up,1, 2, 2 * aspect_ratio);
 
