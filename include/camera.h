@@ -15,8 +15,8 @@ public:
 		lowerLeftCornerLocal(getLLCL())	{}
 	void setEye(const vec3&);
 	void setCenter(const vec3&);
-	ray getRayFromScreenPos(double u, double v);
-private:
+	virtual ray getRayFromScreenPos(double u, double v);
+protected:
 	vec3 getLLCL();
 	void updateCamera();
 	vec3 eye;
@@ -59,5 +59,24 @@ inline ray camera::getRayFromScreenPos(double u, double v)
 	auto pixelPosLocal = lowerLeftCornerLocal + vec3(0.f, u * screenHeight, 0.f) + vec3(v * screenWidth, 0.f, 0.f);
 	return ray(eye, vec3(viewToWorld * vec4(pixelPosLocal, 1.0f))-eye);
 }
+
+class blurcamera: public camera
+{
+public:
+	blurcamera(const vec3& e, const vec3& c, const vec3& u, double focal, double width, double height, double aperture):
+			camera(e, c, u, focal, width, height), lensRadius(aperture/2) {}
+	ray getRayFromScreenPos(double u, double v) override;
+protected:
+	double lensRadius;
+};
+
+inline ray blurcamera::getRayFromScreenPos(double u, double v)
+{
+	vec3 rd = static_cast<float>(lensRadius) * rtweekend::random_in_unit_disk();
+	vec3 offset = vec3(rd.x * u, rd.y * v, 0.f);
+	auto pixelPosLocal = lowerLeftCornerLocal + vec3(0.f, u * screenHeight, 0.f) + vec3(v * screenWidth, 0.f, 0.f);
+	return ray(eye + offset, vec3(viewToWorld * vec4(pixelPosLocal, 1.0f)) - eye - offset);
+}
+
 
 #endif

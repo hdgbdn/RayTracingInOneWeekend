@@ -46,4 +46,12 @@ namespace rtweekend
         glm::vec3 r_out_parallel = - static_cast<float>(sqrt(fabs(1.0 - powf(glm::length(r_out_perp), 2)))) * n;
         return r_out_perp + r_out_parallel;
     }
+
+    glm::vec3 random_in_unit_disk() {
+        while (true) {
+            auto p = glm::vec3(random_double(-1, 1), random_double(-1, 1), 0);
+            if (glm::dot(p, p) >= 1) continue;
+            return p;
+        }
+    }
 }
